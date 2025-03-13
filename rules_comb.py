@@ -36,3 +36,40 @@ def evaluate_combined_rules_by_index(X, y, rule_indices, rule_mapping):
     }
 
     return metrics
+
+
+mapping_dict = mapping_df.set_index(['feature', 'encoded_value'])['original_value'].to_dict()
+
+import re
+
+def decode_rule(rule_str, mapping_dict):
+    pattern = r'\((feature_\d+) ?([<>=]+) ?([0-9\.]+)\)'
+    matches = re.findall(pattern, rule_str)
+    
+    decoded_conditions = []
+    
+    for feature, operator, value in matches:
+        key = (feature, int(float(value)))
+        
+        # Lookup categorical value
+        cat_value = mapping_dict.get(key, value)
+        
+        # Create categorical condition
+        condition = f'({feature} {operator} "{cat_value}")'
+        decoded_conditions.append(condition)
+        
+    # Join conditions back into one string
+    return ' and '.join(decoded_conditions)
+
+encoded_rule = '(feature_1 <= 0.5) and (feature_2 > 0.5)'
+decoded_rule = decode_rule(encoded_rule, mapping_dict)
+
+print(decoded_rule)
+
+rules_df['Decoded_Rule'] = rules_df['Rule'].apply(lambda x: decode_rule(x, mapping_dict))
+
+# Review new DataFrame
+print(rules_df[['Rule', 'Decoded_Rule']])
+
+
+filtered_df = df.query(decoded_rule)
