@@ -76,35 +76,68 @@ class BedrockLLM:
         # Construct prompt using insights
         # Return LLM response
         pass
-1.Shap Processor
-
-# shap_processor.py
-import numpy as np
-
 # shap_processor.py
 import shap
 import pandas as pd
+import os
+import boto3
+from io import BytesIO
 
-def get_shap_explainer(model, X):
-    """
-    Returns a SHAP TreeExplainer for an XGBoost model.
-    """
-    explainer = shap.TreeExplainer(model)
-    return explainer
+def get_shap_explainer(model):
+    return shap.TreeExplainer(model)
 
-def get_shap_values(model, X):
-    """
-    Computes SHAP values for all rows in X using a TreeExplainer.
-    
-    Returns:
-        shap_df (pd.DataFrame): SHAP values, same shape as X
-        explainer (shap.Explainer): SHAP explainer for reuse
-    """
-    explainer = get_shap_explainer(model, X)
+def compute_shap_values(model, X):
+    explainer = get_shap_explainer(model)
     shap_values = explainer.shap_values(X)
+    return pd.DataFrame(shap_values, columns=X.columns, index=X.index), explainer
 
-    shap_df = pd.DataFrame(shap_values, columns=X.columns, index=X.index)
-    return shap_df, explainer
+def get_or_create_shap_values(model, X, save_path=None):
+    """
+    Loads cached SHAP values if available. Computes + saves if not.
+    Supports local or S3 paths (parquet).
+    """
+    if save_path is not None:
+        if save_path.startswith("s3://"):
+            return _handle_s3_shap(model, X, save_path)
+        else:
+            return _handle_local_shap(model, X, save_path)
+
+    # If no save path provided, just compute and return
+    return compute_shap_values(model, X)
+
+# --- Helpers ---
+def _handle_local_shap(model, X, path):
+    if os.path.exists(path):
+        print(f"📂 Loading SHAP values from {path}")
+        shap_df = pd.read_parquet(path)
+        return shap_df, get_shap_explainer(model)
+    else:
+        shap_df, explainer = compute_shap_values(model, X)
+        shap_df.to_parquet(path)
+        print(f"💾 SHAP values saved to {path}")
+        return shap_df, explainer
+
+def _handle_s3_shap(model, X, s3_path):
+    s3 = boto3.client("s3")
+    bucket, key = s3_path.replace("s3://", "").split("/", 1)
+
+    try:
+        response = s3.get_object(Bucket=bucket, Key=key)
+        shap_df = pd.read_parquet(BytesIO(response["Body"].read()))
+        print(f"☁️ Loaded SHAP values from {s3_path}")
+        return shap_df, get_shap_explainer(model)
+
+    except s3.exceptions.NoSuchKey:
+        print(f"⚙️ Computing SHAP values and uploading to {s3_path}")
+        shap_df, explainer = compute_shap_values(model, X)
+
+        buffer = BytesIO()
+        shap_df.to_parquet(buffer, index=True)
+        buffer.seek(0)
+
+        s3.put_object(Body=buffer, Bucket=bucket, Key=key)
+        return shap_df, explainer
+
 
 
 
