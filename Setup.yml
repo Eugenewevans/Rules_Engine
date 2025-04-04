@@ -1,0 +1,17 @@
+narratml:
+  - narratml:
+      - __init__.py
+      - explainer.py
+      - feature_profiles.py
+      - shap_processor.py
+      - pdp_analyzer.py
+      - rule_generator.py
+      - llm_interface.py
+      - utils.py
+  - examples:
+      - demo_explainer.ipynb
+  - tests:
+      - test_explainer.py
+  - setup.py
+  - README.md
+  - requirements.txt
