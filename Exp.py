@@ -81,24 +81,31 @@ class BedrockLLM:
 # shap_processor.py
 import numpy as np
 
-def get_shap_values_for_instance(shap_explainer, input_instance):
-    """Returns dict of feature: shap_value for a single instance"""
-    shap_values = shap_explainer(input_instance)
+# shap_processor.py
+import shap
+import pandas as pd
+
+def get_shap_explainer(model, X):
+    """
+    Returns a SHAP TreeExplainer for an XGBoost model.
+    """
+    explainer = shap.TreeExplainer(model)
+    return explainer
+
+def get_shap_values(model, X):
+    """
+    Computes SHAP values for all rows in X using a TreeExplainer.
     
-    # Assuming TreeExplainer or KernelExplainer output format
-    if hasattr(shap_values, 'values'):
-        shap_array = shap_values.values[0]
-        feature_names = shap_values.feature_names
-    else:
-        shap_array = shap_values[0]
-        feature_names = shap_explainer.data.feature_names_in_
+    Returns:
+        shap_df (pd.DataFrame): SHAP values, same shape as X
+        explainer (shap.Explainer): SHAP explainer for reuse
+    """
+    explainer = get_shap_explainer(model, X)
+    shap_values = explainer.shap_values(X)
 
-    return dict(zip(feature_names, shap_array))
+    shap_df = pd.DataFrame(shap_values, columns=X.columns, index=X.index)
+    return shap_df, explainer
 
-
-def rank_top_features(shap_dict, n=5):
-    """Returns top N features sorted by absolute SHAP value"""
-    return sorted(shap_dict.items(), key=lambda x: abs(x[1]), reverse=True)[:n]
 
 
 2. explainer.py
