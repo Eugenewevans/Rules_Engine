@@ -101,3 +101,88 @@ if __name__ == '__main__':
 
     # Output generated rules and their metrics
     print(rules)
+
+
+    What This System Does
+
+NarratML helps translate "why" a machine learning model made a prediction into simple human language.
+
+Instead of just saying:
+
+“This customer is likely to churn.”
+It can say something like:
+
+“The customer’s high usage of the word ‘cancel,’ their low income, and their rural region contributed to this prediction.”
+This helps people understand, trust, and even act on predictions—especially in fields like healthcare, finance, education, or customer support.
+
+How It Works (Simplified)
+
+Think of it like a 5-step detective process:
+
+1. Look at the Data Used in the Prediction
+Your system starts with structured data (basically, a table). It looks at:
+
+Whether certain words show up (e.g., “refund”, “cancel”)
+What region or category something belongs to
+Numeric values like income or age
+Each column in the table represents a type of information (called a feature).
+
+2. Use SHAP to See What Influenced the Prediction
+SHAP (SHapley Additive exPlanations) is like a calculator that measures how much each feature (like income or word usage) pushed the model’s prediction up or down.
+
+It tells us:
+
+Which pieces of info mattered the most
+Whether each one helped increase or decrease the prediction
+3. Translate the Raw Math into Human-Like Rules
+Now comes the fun part. Instead of saying:
+
+“Income SHAP = +0.23”
+The system translates it to something like:
+
+“Higher income increased the likelihood of this result.”
+It has different rules for:
+
+Words: “The presence of the word ‘cancel’ increased the prediction.”
+Categories: “Customers in this region tend to have a higher risk.”
+Numbers: “Higher values for time spent on hold are linked to higher churn.”
+4. Add Context from Partial Dependence (for Numbers)
+For numeric values (like age, balance, time), the system can even analyze patterns—like:
+
+“As age increases, the risk goes down.”
+“People with income over $70k are less likely to leave.”
+This step gives general insights that help avoid false conclusions.
+
+5. Send Everything to a Generative AI Model
+The final step is where magic happens.
+
+The system takes the top 3–5 most important reasons (in sentence form), sends them to an AI (like AWS Bedrock’s models), and asks:
+
+“Please summarize these into 1-2 simple sentences.”
+And you get back:
+
+“This prediction was driven by the presence of certain risk-indicating words, a high time on hold, and location data associated with churn.”
+This final summary is what the end user sees—clean, readable, trustworthy.
+
+Why This Matters
+
+Transparency: People know why a prediction was made.
+Trust: Businesses and users are more likely to accept the model.
+Actionable Insight: Teams can fix or act on the causes of risky predictions.
+Core Components
+
+Here’s a non-technical breakdown of the building blocks:
+
+Component	Purpose
+Feature Profiler	Identifies what kind of data each feature is (word, number, category)
+SHAP Processor	Figures out how important each feature is for a specific prediction
+Rule Generator	Converts that info into clear text for each feature
+PDP Analyzer	Adds general context for number-based features (e.g., “higher is better”)
+LLM (Bedrock)	Takes all the pieces and summarizes it into human-style sentences
+NarratML Explainer	The central brain that coordinates the entire process
+Example Explanation
+
+Prediction: Customer likely to cancel service
+NarratML Output:
+“This prediction was influenced by the presence of the word 'cancel' in recent messages, a low income level, and a region typically associated with higher churn.”
+Would you like a version of this in presentation or PDF format too? I can create that for internal/executive audiences.
