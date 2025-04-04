@@ -212,4 +212,68 @@ class BedrockLLM:
         )
 
 
+# feature_profiles.py
+
+class FeatureProfiler:
+    def __init__(self, df, target=None):
+        self.df = df
+        self.target = target
+        self.metadata = {}
+
+    def infer_feature_types(self):
+        for col in self.df.columns:
+            if col.startswith("word_"):
+                self.metadata[col] = "word_indicator"
+            elif "encoded" in col:
+                self.metadata[col] = "mean_encoded"
+            elif self.df[col].dtype in ["int64", "float64"]:
+                self.metadata[col] = "numerical"
+            else:
+                self.metadata[col] = "unknown"
+        return self.metadata
+
+    def get_metadata(self):
+        return self.metadata
+
+
+# pdp_analyzer.py
+import numpy as np
+
+def analyze_pdp_trend(x, y, threshold=0.1):
+    """
+    Analyzes trend in PDP line (x = values, y = PDP output)
+    Returns: "increasing", "decreasing", "flat", or "non-monotonic"
+    """
+    slope = np.polyfit(x, y, 1)[0]
+
+    if slope > threshold:
+        return "increasing"
+    elif slope < -threshold:
+        return "decreasing"
+    elif abs(slope) <= threshold:
+        return "flat"
+    else:
+        return "non-monotonic"
+
+def create_pdp_profile(feature_name, x, y):
+    trend = analyze_pdp_trend(x, y)
+    return {
+        "feature": feature_name,
+        "trend": trend,
+        "x": x,
+        "y": y
+    }
+
+# utils.py
+
+def pretty_print_dict(d):
+    for k, v in d.items():
+        print(f"{k}: {v}")
+
+def sort_dict_by_abs_value(d, reverse=True):
+    return dict(sorted(d.items(), key=lambda item: abs(item[1]), reverse=reverse))
+
+
+
+
 
