@@ -214,26 +214,48 @@ class BedrockLLM:
 
 # feature_profiles.py
 
+# feature_profiles.py
+import numpy as np
+import pandas as pd
+import warnings
+
 class FeatureProfiler:
-    def __init__(self, df, target=None):
+    def __init__(self, df: pd.DataFrame):
         self.df = df
-        self.target = target
         self.metadata = {}
 
     def infer_feature_types(self):
         for col in self.df.columns:
-            if col.startswith("word_"):
-                self.metadata[col] = "word_indicator"
-            elif "encoded" in col:
-                self.metadata[col] = "mean_encoded"
-            elif self.df[col].dtype in ["int64", "float64"]:
-                self.metadata[col] = "numerical"
+            series = self.df[col]
+            unique_vals = series.dropna().unique()
+            nunique = len(unique_vals)
+
+            if nunique == 2:
+                # Check if it looks like a proper indicator
+                if set(unique_vals) == {0, 1}:
+                    self.metadata[col] = "indicator"
+                else:
+                    self.metadata[col] = "indicator"
+                    warnings.warn(
+                        f"⚠️ Column '{col}' has 2 unique values but is not [0, 1]: {unique_vals}"
+                    )
+
+            elif pd.api.types.is_numeric_dtype(series):
+                # Check if it's an encoding
+                value_counts = series.value_counts(normalize=True)
+                if all(value_counts < 0.95) and any(value_counts >= 0.05):
+                    self.metadata[col] = "encoding"
+                else:
+                    self.metadata[col] = "numerical"
+
             else:
                 self.metadata[col] = "unknown"
+
         return self.metadata
 
     def get_metadata(self):
         return self.metadata
+
 
 
 # pdp_analyzer.py
