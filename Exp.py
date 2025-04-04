@@ -273,6 +273,14 @@ def pretty_print_dict(d):
 def sort_dict_by_abs_value(d, reverse=True):
     return dict(sorted(d.items(), key=lambda item: abs(item[1]), reverse=reverse))
 
+# narratml/__init__.py
+
+from .explainer import PredictionExplainer
+from .feature_profiles import FeatureProfiler
+from .shap_processor import get_shap_values_for_instance, rank_top_features
+from .rule_generator import generate_rule
+from .llm_interface import BedrockLLM
+from .pdp_analyzer import analyze_pdp_trend, create_pdp_profile
 
 
 
