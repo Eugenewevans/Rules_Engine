@@ -50,3 +50,50 @@ coefficients = pipeline.named_steps['classifier'].coef_[0]
 # 10. Output coefficients
 for name, coef in zip(feature_names, coefficients):
     print(f"{name}: {coef:.4f}")
+
+
+import pandas as pd
+import itertools
+
+# Unique values for each feature
+model1_levels = df_filtered['model1_bucket'].unique()
+model2_levels = df_filtered['model2_bucket'].unique()
+category_levels = df_filtered['your_categorical_feature'].unique()
+
+# Generate all combinations (cartesian product)
+combinations = list(itertools.product(model1_levels, model2_levels, category_levels))
+
+# Build a DataFrame from it
+combo_df = pd.DataFrame(combinations, columns=['model1_bucket', 'model2_bucket', 'import pandas as pd
+
+                                               
+                                               import itertools
+
+# Unique values for each feature
+model1_levels = df_filtered['model1_bucket'].unique()
+model2_levels = df_filtered['model2_bucket'].unique()
+category_levels = df_filtered['your_categorical_feature'].unique()
+
+# Generate all combinations (cartesian product)
+combinations = list(itertools.product(model1_levels, model2_levels, category_levels))
+
+# Build a DataFrame from it
+combo_df = pd.DataFrame(combinations, columns=['model1_bucket', 'model2_bucket', '# Make predictions
+probs = pipeline.predict_proba(combo_df)[:, 1]  # Probability of class 1
+
+# Attach to DataFrame
+combo_df['predicted_prob'] = probs
+
+# Filter by threshold
+filtered = combo_df[combo_df['predicted_prob'] > 0.35]
+
+# View the combinations
+print(filtered.sort_values(by='predicted_prob', ascending=False))
+
+filtered['predicted_prob'] = filtered['predicted_prob'].round(3)
+filtered = filtered.sort_values(by='predicted_prob', ascending=False).reset_index(drop=True)
+
+
+
+
+
