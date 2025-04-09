@@ -91,9 +91,12 @@ filtered = combo_df[combo_df['predicted_prob'] > 0.35]
 print(filtered.sort_values(by='predicted_prob', ascending=False))
 
 filtered['predicted_prob'] = filtered['predicted_prob'].round(3)
-filtered = filtered.sort_values(by='predicted_prob', ascending=False).reset_index(drop=True)
+filtered = filtered.sort_values(by='predicted_prob', ascending=False).reset_index(drop=# Transform with the preprocessor
+X_transformed = pipeline.named_steps['preprocessor'].transform(combo_df)
 
-
+# Predict using the trained classifier
+probs = pipeline.named_steps['classifier'].predict_proba(X_transformed)[:, 1]
+combo_df['predicted_prob'] = probs
 
 
 
